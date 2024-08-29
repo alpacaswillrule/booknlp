@@ -33,6 +33,7 @@ class QuotationAttribution:
 			return start, end
 
 		attributions=[None]*len(quotes)
+		confidence_scores = [None] * len(quotes)
 
 		entity_by_position={}
 		for idx, (start, end, cat, text) in enumerate(entities):
@@ -52,9 +53,10 @@ class QuotationAttribution:
 			y_pred = self.model.forward(x1, m1)
 			orig, meta=o1
 			predictions=torch.argmax(y_pred, axis=1).detach().cpu().numpy()
-			for idx, pred in enumerate(predictions):
+			confidence = torch.max(torch.softmax(y_pred, dim=1), dim=1)[0].detach().cpu().numpy()
+			for idx, (pred, conf) in enumerate(zip(predictions, confidence)):
 
-				global_quote_id=quote_indexes[prediction_id]
+				global_quote_id = quote_indexes[prediction_id]
 
 				prediction=pred[0]
 				quote_start, quote_end=quotes[global_quote_id]
@@ -74,6 +76,7 @@ class QuotationAttribution:
 				if (g_start, g_end) in entity_by_position:
 					quote_chain[quote_start, quote_end]=g_start, g_end
 					attributions[prediction_id]=entity_by_position[g_start, g_end]
+					confidence_scores[prediction_id] = float(conf)
 				else:
 					print("Cannot resolve quotation")
 
@@ -85,7 +88,7 @@ class QuotationAttribution:
 							
 				prediction_id+=1
 
-		return attributions
+		return attributions, confidence_scores
 
 
 

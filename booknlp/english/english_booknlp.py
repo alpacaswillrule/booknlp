@@ -386,9 +386,9 @@ class EnglishBookNLP:
 				start_time=time.time()
 
 				if self.doQuoteAttrib:
-
-					entities=entity_vals["entities"]
-					attributed_quotations=self.quote_attrib.tag(quotes, entities, tokens)
+					entities = entity_vals["entities"]
+					attributed_quotations, confidence_scores = self.quote_attrib.tag(quotes, entities, tokens)
+					
 
 					print("--- attribution: %.3f seconds ---" % (time.time() - start_time))
 					# return time.time() - start_time
@@ -463,27 +463,27 @@ class EnglishBookNLP:
 
 				if self.doQuoteAttrib:
 					with open(join(outFolder, "%s.quotes" % (idd)), "w", encoding="utf-8") as out:
-						out.write('\t'.join(["quote_start", "quote_end", "mention_start", "mention_end", "mention_phrase", "char_id", "quote"]) + "\n")
-
+						out.write('\t'.join(["quote_start", "quote_end", "mention_start", "mention_end", "mention_phrase", "char_id", "quote", "confidence"]) + "\n")
+						
 						for idx, line in enumerate(attributed_quotations):
-							q_start, q_end=quotes[idx]
-							mention=attributed_quotations[idx]
+							q_start, q_end = quotes[idx]
+							mention = attributed_quotations[idx]
+							confidence = confidence_scores[idx]
 							if mention is not None:
-								entity=entities[mention]
-								speaker_id=assignments[mention]
-								e_start=entity[0]
-								e_end=entity[1]
-								cat=entity[3]
-								speak=speaker_id
+								entity = entities[mention]
+								speaker_id = assignments[mention]
+								e_start = entity[0]
+								e_end = entity[1]
+								cat = entity[3]
+								speak = speaker_id
 							else:
-								e_start=None
-								e_end=None
-								cat=None
-								speak=None
-							quote=[tok.text for tok in tokens[q_start:q_end+1]]
-							out.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (q_start, q_end, e_start, e_end, cat, speak, ' '.join(quote)))
-					
-						out.close()
+								e_start = None
+								e_end = None
+								cat = None
+								speak = None
+							quote = [tok.text for tok in tokens[q_start:q_end+1]]
+							out.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (q_start, q_end, e_start, e_end, cat, speak, ' '.join(quote), confidence))
+							#out.close()
 
 				if self.doQuoteAttrib and self.doCoref:
 
